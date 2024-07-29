@@ -3,6 +3,8 @@ from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.schema.output_parser import StrOutputParser
 from langchain_community.document_loaders.csv_loader import CSVLoader
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.prompts import PromptTemplate
@@ -19,17 +21,22 @@ class Chat:
     self.prompt = PromptTemplate.from_template(
       """
       <s> [INST] You are an assistant for question-answering tasks. Use the following pieces of retrieved context 
-      to answer the question. If you don't know the answer, just say that you don't know. Use three sentences
-      maximum and keep the answer concise. [/INST] </s> 
+      to answer the question. If you don't know the answer, just response literally "I don't know". If you know the answer then
+      use three sentences maximum and keep the answer concise. [/INST] </s> 
       [INST] Question: {question} 
       Context: {context} 
       Answer: [/INST]
       """
     )
 
-  def ingest(self, file_path: str):
-    # docs = PyPDFLoader(file_path=pdf_file_path).load()
-    docs = CSVLoader(file_path=file_path).load()
+  def ingest(self, file_path: str, file_type: str):
+    if file_type == 'csv':
+      docs = CSVLoader(file_path=file_path).load()
+    if file_type == 'pdf':
+      docs = PyPDFLoader(file_path=file_path).load()
+    if file_type == 'txt':
+      docs = TextLoader(file_path=file_path).load()
+
     chunks = self.text_splitter.split_documents(docs)
     chunks = filter_complex_metadata(chunks)
 
